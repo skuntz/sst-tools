@@ -19,8 +19,6 @@ Creating link 4
 Creating link 5
 Creating link 6
 Creating link 7
-Interactive console: sst.interactive.simpledebug
-Interactive console: sst.interactive.simpledebug
 Entering interactive mode at time 1054000 
 	Interactive Console real time action at time 1.054 us
 > Entering interactive mode at time 1054000 
@@ -53,8 +51,6 @@ Creating link 4
 Creating link 5
 Creating link 6
 Creating link 7
-Interactive console: sst.interactive.simpledebug
-Interactive console: sst.interactive.simpledebug
 Entering interactive mode at time 1054000 
 	Interactive Console real time action at time 1.054 us
 > Entering interactive mode at time 1054000 
@@ -83,10 +79,6 @@ Creating link 4
 Creating link 5
 Creating link 6
 Creating link 7
-Interactive console not specified
-Disabling breaks: interactive console not specified
-Interactive console not specified
-Disabling breaks: interactive console not specified
 IGridNode[cp0:clockTick:1060000]: cp0 ready to end simulation
 IGridNode[cp1:clockTick:1060000]: cp1 ready to end simulation
 Simulation is complete, simulated time: 1.06 us
@@ -111,10 +103,6 @@ Creating link 4
 Creating link 5
 Creating link 6
 Creating link 7
-Interactive console not specified
-Disabling breaks: interactive console not specified
-Interactive console not specified
-Disabling breaks: interactive console not specified
 IGridNode[cp0:clockTick:1060000]: cp0 ready to end simulation
 IGridNode[cp1:clockTick:1060000]: cp1 ready to end simulation
 Simulation is complete, simulated time: 1.06 us

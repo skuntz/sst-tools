@@ -48,10 +48,10 @@ IGridNode::IGridNode(SST::ComponentId_t id, const SST::Params& params ) :
   dataMax += demoBug;
 
   // Disable breaks if interactive console not enabled
-  if ( ! interactiveRTA.isEnabled() ) {
-    output.output("Disabling breaks: interactive console not specified\n");
-    breakEnable = false;
-  }
+  //if ( ! interactiveRTA.isEnabled() ) {
+  //  output.output("Disabling breaks: interactive console not specified\n");
+  //  breakEnable = false;
+  //}
 
   // sanity check the params
   if (minData < 10) {

@@ -14,4 +14,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 message(STATUS "[SST-TOOLS] Enabling dbgcli")
 add_subdirectory(dbgcli)
 
+message(STATUS "[SST-TOOLS] Enabling igrid")
+add_subdirectory(igrid)
+
 # EOF
