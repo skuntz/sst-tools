@@ -169,6 +169,9 @@ void IGridNode::handleEvent(SST::Event *ev){
   auto portRNG = rng[portname[rcv_port]];
   uint64_t range = maxData - minData + 1;
   uint64_t r = portRNG->generateNextUInt32() % range + minData;
+  
+ // printf("data size = %ld\n", data.size());
+  
   if (r != data.size()) {
     output.fatal(CALL_INFO, -1,
                   "%s expected data size %" PRIu64 " does not match actual size %" PRIu64 "\n",
@@ -192,11 +195,12 @@ void IGridNode::handleEvent(SST::Event *ev){
   // Interactive Console Debug Example
   // breakEnable can be set from interactive console to enable/disable as long it is serialized 
   // Could also add triggers etc to control when to break
-  if (breakEnable) {
-    std::string message = "\tBreak to interactive console from event handler\n";
+#if 0
+  if ((datasizeTrigger == data.size()) && breakEnable) {
+    std::string message = "\tBreak on datasizeTrigger\n";
     SST::BaseComponent::initiateInteractive(message.c_str());
   }
-
+#endif
   delete ev;
 }
 

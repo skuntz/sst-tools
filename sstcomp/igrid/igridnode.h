@@ -175,7 +175,10 @@ private:
   // Interactive Console Debug Example
   // Break into interactive console for debug
   // Can be enabled with cmd line parameter or modified from interactive console
-  volatile int breakEnable;
+  volatile 
+  int breakEnable;
+  volatile 
+  uint64_t datasizeTrigger = 198;
 
   // -- private methods
   /// event handler
