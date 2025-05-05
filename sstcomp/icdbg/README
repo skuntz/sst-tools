@@ -1,0 +1,7 @@
+Interactive Console Debug (icdbg) Tool
+
+This code provides an extension of the sst-core simpledebug debugging support. 
+We can extend this copy with whatever additional debugging commands we want
+e.g. help and shutdown. 
+
+

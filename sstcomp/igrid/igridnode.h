@@ -49,7 +49,7 @@ private:
   /// IGridNodeEvent: serialization method
   void serialize_order(SST::Core::Serialization::serializer& ser) override{
     Event::serialize_order(ser);
-    SST_SER(data)
+    SST_SER(data);
   }
 
   /// IGridNodeEvent: serialization implementor
@@ -78,7 +78,7 @@ public:
   void init( unsigned int phase ) override;
 
   /// IGridNode: standard SST component printStatus
-  void printStatus(Output& out) override;
+  void printStatus(Output& out) final; //override;
 
   /// IGridNode: standard SST component clock function
   bool clockTick( SST::Cycle_t currentCycle );
@@ -153,6 +153,8 @@ private:
   unsigned numPorts;                              ///< number of ports to configure
   uint64_t minData;                               ///< minimum number of data elements
   uint64_t maxData;                               ///< maxmium number of data elements
+  //volatile 
+  uint64_t curDataSize;
   uint64_t minDelay;                              ///< minimum clock delay between sends
   uint64_t maxDelay;                              ///< maximum clock delay between sends
   uint64_t clocks;                                ///< number of clocks to execute
@@ -178,7 +180,7 @@ private:
   volatile 
   int breakEnable;
   volatile 
-  uint64_t datasizeTrigger = 198;
+  uint64_t datasizeTrigger = 102;
 
   // -- private methods
   /// event handler

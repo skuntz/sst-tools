@@ -18,7 +18,7 @@ namespace SST::IGridNode{
 //------------------------------------------
 IGridNode::IGridNode(SST::ComponentId_t id, const SST::Params& params ) :
   SST::Component( id ), timeConverter(nullptr), clockHandler(nullptr),
-  numPorts(8), minData(10), maxData(256), minDelay(20), maxDelay(100), clocks(1000),
+  numPorts(8), minData(10), maxData(256), curDataSize(0), minDelay(20), maxDelay(100), clocks(1000),
   curCycle(0), demoBug(0), dataMask(0x1ffffff), dataMax(0x1ffffff) {
   
   kgdbg::spinner("GRIDSPINNER");
@@ -123,30 +123,32 @@ void IGridNode::init( unsigned int phase ){
 }
 
 void IGridNode::printStatus( Output& out ){
+  output.output("IGridNode::printStatus\n");
 }
 
 void IGridNode::serialize_order(SST::Core::Serialization::serializer& ser){
   SST::Component::serialize_order(ser);
-  SST_SER(clockHandler)
-  SST_SER(numBytes)
-  SST_SER(numPorts)
-  SST_SER(minData)
-  SST_SER(maxData)
-  SST_SER(minDelay)
-  SST_SER(maxDelay)
-  SST_SER(clkDelay)
-  SST_SER(clocks)
-  SST_SER(rngSeed)
-  SST_SER(state)
-  SST_SER(curCycle)
-  SST_SER(portname)
-  SST_SER(rng)
-  SST_SER(localRNG)
-  SST_SER(linkHandlers)
-  SST_SER(demoBug)
-  SST_SER(dataMask)
-  SST_SER(dataMax)
-  SST_SER(breakEnable)
+  SST_SER(clockHandler);
+  SST_SER(numBytes);
+  SST_SER(numPorts);
+  SST_SER(minData);
+  SST_SER(maxData);
+  SST_SER(curDataSize);
+  SST_SER(minDelay);
+  SST_SER(maxDelay);
+  SST_SER(clkDelay);
+  SST_SER(clocks);
+  SST_SER(rngSeed);
+  SST_SER(state);
+  SST_SER(curCycle);
+  SST_SER(portname);
+  SST_SER(rng);
+  SST_SER(localRNG);
+  SST_SER(linkHandlers);
+  SST_SER(demoBug);
+  SST_SER(dataMask);
+  SST_SER(dataMax);
+  SST_SER(breakEnable);
 }
 
 void IGridNode::handleEvent(SST::Event *ev){
@@ -171,7 +173,12 @@ void IGridNode::handleEvent(SST::Event *ev){
   uint64_t r = portRNG->generateNextUInt32() % range + minData;
   
  // printf("data size = %ld\n", data.size());
-  
+  curDataSize = data.size();
+#if 1
+  printf("%ld: %s: curDataSize = %ld, curCycle = %ld\n", getCurrentSimCycle(), getName().c_str(), curDataSize, curCycle);
+  //printStatus(output);
+  fflush(stdout);
+#endif
   if (r != data.size()) {
     output.fatal(CALL_INFO, -1,
                   "%s expected data size %" PRIu64 " does not match actual size %" PRIu64 "\n",
@@ -195,9 +202,12 @@ void IGridNode::handleEvent(SST::Event *ev){
   // Interactive Console Debug Example
   // breakEnable can be set from interactive console to enable/disable as long it is serialized 
   // Could also add triggers etc to control when to break
-#if 0
-  if ((datasizeTrigger == data.size()) && breakEnable) {
+#if 1
+  //if ((datasizeTrigger == data.size()) && breakEnable) {
+  if (breakEnable) {
     std::string message = "\tBreak on datasizeTrigger\n";
+    printf("\tBreak: data size = %ld (%ld)\n", data.size(), curDataSize);
+    //maxData += 8;
     SST::BaseComponent::initiateInteractive(message.c_str());
   }
 #endif
