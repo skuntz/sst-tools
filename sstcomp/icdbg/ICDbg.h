@@ -15,7 +15,8 @@
 #include "SST.h"
 //#include "sst/core/eli/elementinfo.h"
 //#include "sst/core/interactiveConsole.h"
-
+//#include "sst/core/serialization/objectMapDeferred.h"
+//#include "sst/core/watchPoint.h"
 
 namespace SST::ICDbg{
 
@@ -24,8 +25,11 @@ class ICDebug : public SST::InteractiveConsole
 
 public:
     SST_ELI_REGISTER_INTERACTIVE_CONSOLE(
-        ICDebug, "sst", "icdbg", SST_ELI_ELEMENT_VERSION(1, 0, 0),
-        "{EXPERIMENTAL} Simple interactive debugging console for interactive mode.")
+        ICDebug, 
+        "sst", 
+        "icdbg", 
+        SST_ELI_ELEMENT_VERSION(1, 0, 0),
+        "{EXPERIMENTAL} Simple user-defined interactive debugging console for interactive mode.")
 
     /**
        Creates a new self partition scheme.
@@ -45,6 +49,12 @@ private:
     SST::Core::Serialization::ObjectMap* obj_ = nullptr;
     bool                                 done = false;
 
+    // Keep a pointer to the ObjectMap for the top level Component
+    SST::Core::Serialization::ObjectMapArray<BaseComponent>* base_comp_ = nullptr;
+    
+    // Keep track of all the WatchPoints
+    //std::vector<std::pair<WatchPoint*, BaseComponent*>> watch_points_;
+
     std::vector<std::string> tokenize(std::vector<std::string>& tokens, const std::string& input);
 
     void cmd_help(std::vector<std::string>& UNUSED(tokens));
@@ -55,6 +65,8 @@ private:
     void cmd_set(std::vector<std::string>& tokens);
     void cmd_time(std::vector<std::string>& tokens);
     void cmd_run(std::vector<std::string>& tokens);
+    //void cmd_watch(std::vector<std::string>& tokens);
+    //void cmd_unwatch(std::vector<std::string>& tokens);
     void cmd_shutdown(std::vector<std::string>& tokens);
 
     void dispatch_cmd(std::string cmd);
