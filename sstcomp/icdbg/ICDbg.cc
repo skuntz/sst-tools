@@ -22,7 +22,9 @@
 
 namespace SST::ICDbg {
 
-ICDebug::ICDebug(Params& UNUSED(params)) : InteractiveConsole() {}
+ICDebug::ICDebug(Params& UNUSED(params)) : InteractiveConsole() {
+  //registerAsPrimaryComponent();
+}
 
 void
 ICDebug::execute(const std::string& msg)
@@ -409,7 +411,7 @@ SimpleDebugger::cmd_unwatch(std::vector<std::string>& tokens)
     watch_points_.erase(watch_points_.begin() + index);
 }
 #endif
-
+#if 1
 void
 ICDebug::cmd_shutdown(std::vector<std::string>& tokens)
 {
@@ -418,6 +420,7 @@ ICDebug::cmd_shutdown(std::vector<std::string>& tokens)
     printf("Exiting ObjectExplorer and shutting down simulation\n");
     return;
 }
+#endif
 
 
 void

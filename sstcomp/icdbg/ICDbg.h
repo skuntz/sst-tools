@@ -26,8 +26,8 @@ class ICDebug : public SST::InteractiveConsole
 public:
     SST_ELI_REGISTER_INTERACTIVE_CONSOLE(
         ICDebug, 
-        "sst", 
         "icdbg", 
+        "ICDebug", 
         SST_ELI_ELEMENT_VERSION(1, 0, 0),
         "{EXPERIMENTAL} Simple user-defined interactive debugging console for interactive mode.")
 
@@ -35,6 +35,7 @@ public:
        Creates a new self partition scheme.
     */
     ICDebug(Params& params);
+    ~ICDebug() {}
 
     void execute(const std::string& msg) override;
 
