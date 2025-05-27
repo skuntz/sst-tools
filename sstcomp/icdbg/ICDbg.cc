@@ -301,7 +301,7 @@ ICDebug::cmd_run(std::vector<std::string>& tokens)
 
 #if 0
 void
-SimpleDebugger::cmd_watch(std::vector<std::string>& tokens)
+ICDebug::cmd_watch(std::vector<std::string>& tokens)
 {
     if ( tokens.size() == 1 ) {
         // Just print the watch points
@@ -375,9 +375,10 @@ SimpleDebugger::cmd_watch(std::vector<std::string>& tokens)
         return;
     }
 }
-
+#endif
+#if 0
 void
-SimpleDebugger::cmd_unwatch(std::vector<std::string>& tokens)
+ICDebug::cmd_unwatch(std::vector<std::string>& tokens)
 {
     if ( tokens.size() != 2 ) {
         printf("Invalid format for unwatch command\n");
@@ -411,7 +412,7 @@ SimpleDebugger::cmd_unwatch(std::vector<std::string>& tokens)
     watch_points_.erase(watch_points_.begin() + index);
 }
 #endif
-#if 1
+#if 0
 void
 ICDebug::cmd_shutdown(std::vector<std::string>& tokens)
 {
@@ -458,13 +459,17 @@ ICDebug::dispatch_cmd(std::string cmd)
     else if ( tokens[0] == "watch" ) {
         cmd_watch(tokens);
     }
+    #endif
+    #if 0
     else if ( tokens[0] == "unwatch" ) {
         cmd_unwatch(tokens);
     }
     #endif
+    #if 0
     else if ( tokens[0] == "shutdown" ) {
         cmd_shutdown(tokens);
     }
+    #endif
     else if ( tokens[0] == "help" ) {
         cmd_help(tokens);
     }

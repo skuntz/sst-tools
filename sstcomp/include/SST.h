@@ -54,6 +54,7 @@
 #include <sst/core/interactiveConsole.h>
 #include "sst/core/serialization/objectMapDeferred.h"
 //#include "sst/core/watchPoint.h"  // SKK Not yet user facing
+#include <sst/core/realtimeAction.h>
 
 // clang-format on
 

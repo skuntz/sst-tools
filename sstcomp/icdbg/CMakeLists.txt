@@ -10,11 +10,13 @@
 set(ICDbgSrcs
   ICDbg.cc
   ICDbg.h
+  testRTAction.cc
+  testRTAction.h
 )
 
 add_library(icdbg SHARED ${ICDbgSrcs})
 target_include_directories(icdbg PUBLIC ${SST_INSTALL_DIR}/include)
 install(TARGETS icdbg DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 install(CODE "execute_process(COMMAND sst-register icdbg icdbg_LIBDIR=${CMAKE_CURRENT_SOURCE_DIR})")
-#install(CODE "execute_process(COMMAND sst-register ICDebug icdbg_LIBDIR=${CMAKE_CURRENT_SOURCE_DIR})")
+install(CODE "execute_process(COMMAND sst-register ICDebug icdbg_LIBDIR=${CMAKE_CURRENT_SOURCE_DIR})")
 # EOF

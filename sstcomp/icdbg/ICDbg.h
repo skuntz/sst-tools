@@ -14,9 +14,9 @@
 
 #include "SST.h"
 //#include "sst/core/eli/elementinfo.h"
-//#include "sst/core/interactiveConsole.h"
+//#include <sst/core/watchPoint.h>
+//#include <sst/core/interactiveConsole.h>
 //#include "sst/core/serialization/objectMapDeferred.h"
-//#include "sst/core/watchPoint.h"
 
 namespace SST::ICDbg{
 
@@ -31,9 +31,6 @@ public:
         SST_ELI_ELEMENT_VERSION(1, 0, 0),
         "{EXPERIMENTAL} Simple user-defined interactive debugging console for interactive mode.")
 
-    /**
-       Creates a new self partition scheme.
-    */
     ICDebug(Params& params);
     ~ICDebug() {}
 
@@ -68,11 +65,11 @@ private:
     void cmd_run(std::vector<std::string>& tokens);
     //void cmd_watch(std::vector<std::string>& tokens);
     //void cmd_unwatch(std::vector<std::string>& tokens);
-    void cmd_shutdown(std::vector<std::string>& tokens);
+    //void cmd_shutdown(std::vector<std::string>& tokens);
 
     void dispatch_cmd(std::string cmd);
 };
 
-} // namespace SST::IMPL::Interactive
+} // namespace SST::ICDbg
 
 #endif
