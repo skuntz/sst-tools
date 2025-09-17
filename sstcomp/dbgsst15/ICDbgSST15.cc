@@ -117,7 +117,7 @@ ICDebugSST15::cmd_help(std::vector<std::string>& UNUSED(tokens))
     help.append("   - resetTrace <watchpointIndex>: resets the trace buffer for "
                 "the specified watchpoint\n");
     help.append("   - unwatch <watchpointIndex>: removes the specified "
-                "watchpoint from the watch list\n");
+                "watchpoint from the watch list. If no index is provided, all watchpoints are removed.\n");
     help.append("\n");
     help.append("  Execute: Execute the simulation for a specified duration\n");
     help.append("   - run [TIME]: runs the simulation from the current point for "
@@ -1091,6 +1091,8 @@ ICDebugSST15::dispatch_cmd(std::string cmd)
 {
     std::vector<std::string> tokens;
     tokenize(tokens, cmd);
+
+    if (cmd.size() == 0) return;
 
     if ( tokens[0] == "exit" || tokens[0] == "quit" ) {
         printf("Exiting ObjectExplorer\n");
