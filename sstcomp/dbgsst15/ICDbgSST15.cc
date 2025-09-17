@@ -91,7 +91,7 @@ ICDebugSST15::cmd_help(std::vector<std::string>& UNUSED(tokens))
     help.append("                \"trace\" creates a watchpoint with a trace "
                 "buffer to trace a set of variables and trigger an <action>\n");
     help.append("                Available actions include: interactive, "
-                "printTrace, checkpoint, or printStatus\n");
+                "printTrace, checkpoint, set, or printStatus\n");
     help.append("   - watch <trigger>: adds watchpoint to the watchlist; breaks "
                 "into interactive console when triggered\n");
     help.append("                Example: watch size > 90 && count < 100 || "
@@ -588,22 +588,25 @@ parseComparison(std::vector<std::string>& tokens, size_t& index, Core::Serializa
 
     std::string                                  var("");
     Core::Serialization::ObjectMapComparison::Op op = Core::Serialization::ObjectMapComparison::Op::INVALID;
-    std::string                                  val("");
+    std::string                                  v2("");
+    std::string                                  name2("");
+    std::string                                  opstr("");
 
     // Get first comparison
     var = tokens[index++];
-    if ( index == tokens.size() ) {
-        printf("Invalid format for watch command\n");
+    if (index == tokens.size()) {
+        printf("Invalid format for trigger test\n");
         return nullptr;
     }
-    op = Core::Serialization::ObjectMapComparison::getOperationFromString(tokens[index++]);
-    if ( op != Core::Serialization::ObjectMapComparison::Op::CHANGED ) {
-        if ( index == tokens.size() ) {
-            printf("Invalid format for watch command. Valid formats are watch <var> "
-                   "and watch <var> <comp> <val>\n");
+    opstr = tokens[index++];
+    op = Core::Serialization::ObjectMapComparison::getOperationFromString(opstr);
+    if (op != Core::Serialization::ObjectMapComparison::Op::CHANGED) {
+        if (index == tokens.size()) {
+            printf("Invalid format for trigger test. Valid formats are <var> changed"
+                "and <var> <op> <val>\n");
             return nullptr;
         }
-        val = tokens[index++];
+        v2 = tokens[index++];
     }
 
     // Check for errors and build ObjectMapComparison
@@ -611,35 +614,134 @@ parseComparison(std::vector<std::string>& tokens, size_t& index, Core::Serializa
     Core::Serialization::ObjectMap* map = obj->findVariable(var);
 
     // Valid variable name
-    if ( nullptr == map ) {
+    if (nullptr == map) {
         printf("Unknown variable: %s\n", var.c_str());
         return nullptr;
     }
 
     // Is variable fundamental
-    if ( !map->isFundamental() ) {
-        printf("Watches can only be placed on fundamental types; %s is not "
-               "fundamental\n",
+    if (!map->isFundamental()) {
+        printf("Triggers can only use fundamental types; %s is not "
+            "fundamental\n",
             var.c_str());
         return nullptr;
     }
 
     // Is operator valid
-    if ( op == Core::Serialization::ObjectMapComparison::Op::INVALID ) {
-        printf("Unknown comparison operation specified in watch command\n");
+    if (op == Core::Serialization::ObjectMapComparison::Op::INVALID) {
+        printf("Unknown comparison operation specified in trigger test\n");
         return nullptr;
     }
 
     name = obj->getFullName() + "/" + var;
 
-    try {
-        // auto* c = map->getComparison(obj_->getFullName() + "/" + var, op, val);
-        // // Can throw an exception
-        auto* c = map->getComparison(name, op, val); // Can throw an exception
-        return c;
+    // Check if v2 is a variable
+    Core::Serialization::ObjectMap* map2 = obj->findVariable(v2);
+
+    // V2 is valid variable
+    if (nullptr != map2) {
+        //printf("v2 is variable\n");
+
+        // Is variable fundamental
+        if (!map2->isFundamental()) {
+            printf("Triggers can only use fundamental types; %s is not "
+                "fundamental\n",
+                v2.c_str());
+            return nullptr;
+        }
+
+        name2 = obj->getFullName() + "/" + v2;
+        try {
+            auto* c = map->getComparisonVar(name, op, name2, map2); // Can throw an exception
+            return c;
+        }
+        catch (std::exception& e) {
+            printf("Invalid argument passed to trigger test: %s %s %s\n", var.c_str(), opstr.c_str(), v2.c_str());
+            return nullptr;
+        }
     }
-    catch ( std::exception& e ) {
-        printf("Invalid argument passed to watch command\n");
+    else {  // V2 is value string
+        //printf("v2 is value string\n");
+        try {
+            auto* c = map->getComparison(name, op, v2); // Can throw an exception
+            return c;
+        }
+        catch (std::exception& e) {
+            printf("Invalid argument passed to trigger test: %s %s %s\n", var.c_str(), opstr.c_str(), v2.c_str());
+            return nullptr;
+        }
+    }
+}
+
+
+WatchPoint::WPAction*
+parseAction(std::vector<std::string>& tokens, size_t& index, Core::Serialization::ObjectMap* obj)
+{
+    std::string action = tokens[index++];
+
+    if (action == "interactive") {
+        return new WatchPoint::InteractiveWPAction();
+    }
+    else if (action == "printTrace") {
+        return new WatchPoint::PrintTraceWPAction();
+    }
+    else if (action == "checkpoint") {
+        return new WatchPoint::CheckpointWPAction();
+    }
+    else if (action == "printStatus") {
+        return new WatchPoint::PrintStatusWPAction();
+    }
+    else if (action == "set") {
+        if (index >= tokens.size()) {
+            printf("Missing variable for set command\n");
+            return nullptr;
+        }
+        std::string tvar = tokens[index++];
+        // printf("%s ", tvar.c_str());
+
+        if (index >= tokens.size()) {
+            printf("Missing value for set command\n");
+            return nullptr;
+        }
+        std::string tval = tokens[index++];
+
+        // Find and check variable
+        Core::Serialization::ObjectMap* map = obj->findVariable(tvar);
+        if (nullptr == map) {
+            printf("Unknown variable: %s\n", tvar.c_str());
+            return nullptr;
+        }
+
+        // Is variable fundamental
+        if (!map->isFundamental()) {
+            printf("Can only set fundamental variable, %s is not fundamental\n",
+                tvar.c_str());
+            return nullptr;
+        }
+
+        // Is variable read-only
+        if (map->isReadOnly()) {
+            printf("Object specified in set command is read-only: %s\n", tvar.c_str());
+            return nullptr;
+        }
+
+        // Check for valid value
+        if (!map->checkValue(tval)) {
+            //printf("Invalid value specified in set command: %s\n", tval.c_str());
+            return nullptr;
+        }
+
+        std::string name = obj->getFullName() + "/" + tvar;
+
+        return new WatchPoint::SetVarWPAction(name, map, tval);
+
+    }
+#if 0
+    else if (action == "heartbeat") {
+        return WatchPoint::HeartbeatAction();
+    }
+#endif
+    else {
         return nullptr;
     }
 }
@@ -663,7 +765,7 @@ ICDebugSST15::cmd_watch(std::vector<std::string>& tokens)
         // Get first comparison
         Core::Serialization::ObjectMapComparison* c = parseComparison(tokens, index, obj_, name);
         if ( c == nullptr ) {
-            printf("Invalid argument passed to watch command\n");
+            printf("Invalid comparison argument passed to watch command\n");
             return;
         }
         auto* pt = new WatchPoint(name, c);
@@ -705,22 +807,52 @@ ICDebugSST15::cmd_watch(std::vector<std::string>& tokens)
             // Get next comparison
             Core::Serialization::ObjectMapComparison* c = parseComparison(tokens, index, obj_, name);
             if ( c == nullptr ) {
-                printf("Invalid argument passed to watch command\n");
+                printf("Invalid comparison argument passed to watch command\n");
                 return;
             }
             pt->addComparison(c);
 
         } // while index < tokens.size(), add another logic op and test comparision
+
+        // Parse action
+        std::string action = "interactive";
+        WatchPoint::WPAction* actionObj = new WatchPoint::InteractiveWPAction();
+        if (actionObj == nullptr) {
+            printf("Error in action: %s\n", action.c_str());
+            return;
+        }
+        else {
+            pt->setAction(actionObj);
+        }
     } // try/catch  TODO: need to revisit what can actually throw an exception
     catch ( std::exception& e ) {
-        printf("Invalid argument passed to watch command\n");
+        printf("Invalid format for watch command\n");
         return;
     }
+
+    // Check for extra arguments
+    if (index != tokens.size()) {
+        printf("Invalid format for watch command: too many arguments\n");
+        return;
+    }
+
 }
 
 void
 ICDebugSST15::cmd_unwatch(std::vector<std::string>& tokens)
 {
+
+    // If no arguments, unwatch all watchpoints in this component
+    if (tokens.size() == 1) {
+        for (std::pair<WatchPoint*, BaseComponent*>& wp : watch_points_) { // 'element' is a reference to each vector element
+            WatchPoint* pt = wp.first;
+            BaseComponent* comp = wp.second;
+            comp->removeWatchPoint(pt);
+        }
+        watch_points_.clear();
+        return;
+    }
+
     if ( tokens.size() != 2 ) {
         printf("Invalid format for unwatch command\n");
         return;
@@ -732,7 +864,7 @@ ICDebugSST15::cmd_unwatch(std::vector<std::string>& tokens)
         index = (long unsigned int)SST::Core::from_string<int>(tokens[1]);
     }
     catch ( std::invalid_argument& e ) {
-        printf("Invalid index format specified.  The unwatch command requires that "
+        printf("Invalid index format specified. The unwatch command requires that "
                "one of the index shown when "
                "\"watch\" is run with no arguments be specified\n");
         return;
@@ -740,8 +872,7 @@ ICDebugSST15::cmd_unwatch(std::vector<std::string>& tokens)
 
     if ( watch_points_.size() <= index ) {
         printf("Watch point %s not found. The unwatch command requires that one of "
-               "the index shown when \"watch\" is run "
-               "with no arguments be specified\n",
+               "the index shown when \"watchlist\" is run be specified\n",
             tokens[1].c_str());
         return;
     }
@@ -754,48 +885,17 @@ ICDebugSST15::cmd_unwatch(std::vector<std::string>& tokens)
     watch_points_.erase(watch_points_.begin() + index);
 }
 
-void
-ICDebugSST15::cmd_shutdown(std::vector<std::string>& tokens)
-{
-    simulationShutdown();
-    done = true;
-    printf("Exiting ObjectExplorer and shutting down simulation\n");
-    return;
-}
 
-WatchPoint::WPACTION
-getAction(const std::string& action)
-{
-    if ( action == "interactive" ) {
-        return WatchPoint::WPACTION::INTERACTIVE;
-    }
-    else if ( action == "printTrace" ) {
-        return WatchPoint::WPACTION::PRINT_TRACE;
-    }
-    else if ( action == "checkpoint" ) {
-        return WatchPoint::WPACTION::CHECKPOINT;
-    }
-    else if ( action == "printStatus" ) {
-        return WatchPoint::WPACTION::PRINT_STATUS;
-    }
-    else if ( action == "heartbeat" ) {
-        return WatchPoint::WPACTION::HEARTBEAT;
-    }
-    else {
-        return WatchPoint::WPACTION::INVALID;
-    }
-}
 Core::Serialization::TraceBuffer*
 parseTraceBuffer(std::vector<std::string>& tokens, size_t& index, Core::Serialization::ObjectMap* obj)
 {
-
     size_t bufsize = 32;
     size_t pdelay  = 0;
 
     // Get buffer config
     if ( tokens[index++] != ":" ) {
         printf("Invalid format: trace <trigger> : <bufsize> <postdelay> : <v1> ... "
-               "<vN>\n");
+               "<vN> : <action>\n");
         return nullptr;
     }
     // Could check for ":" here and assume that means they just want default
@@ -828,17 +928,17 @@ parseTraceBuffer(std::vector<std::string>& tokens, size_t& index, Core::Serializ
 
     if ( tokens[index++] != ":" ) {
         printf("Invalid format: trace <var> <op> <value> : <bufsize> <postdelay> : "
-               "<v1> ... <vN>\n");
+               "<v1> ... <vN> : <action>\n");
         return nullptr;
     }
 
     try {
         // Setup Trace Buffer
-        // auto* tb =
         return new Core::Serialization::TraceBuffer(obj, bufsize, pdelay);
+        
     }
     catch ( std::exception& e ) {
-        printf("Invalid argument passed to trace command\n");
+        printf("HERE: Invalid buffer argument passed to trace command\n");
         return nullptr;
     }
 }
@@ -872,9 +972,9 @@ parseTraceVar(std::string& tvar, Core::Serialization::ObjectMap* obj, Core::Seri
 void
 ICDebugSST15::cmd_trace(std::vector<std::string>& tokens)
 {
-    if ( tokens.size() < 8 ) {
+    if ( tokens.size() < 9 ) {
         printf("Invalid format: trace <var> <op> <value> : <bufsize> <postdelay> : "
-               "<v1> ... <vN>\n");
+               "<v1> ... <vN> : <action>\n");
         return;
     }
 
@@ -884,7 +984,7 @@ ICDebugSST15::cmd_trace(std::vector<std::string>& tokens)
     // Get first comparison
     Core::Serialization::ObjectMapComparison* c = parseComparison(tokens, index, obj_, name);
     if ( c == nullptr ) {
-        printf("Invalid argument passed to trace command\n");
+        printf("Invalid argument passed in comparison trigger command\n");
         return;
     }
     auto* pt = new WatchPoint(name, c);
@@ -905,14 +1005,14 @@ ICDebugSST15::cmd_trace(std::vector<std::string>& tokens)
             pt->addLogicOp(logicOp);
         }
         if ( index == tokens.size() ) {
-            printf("Invalid format for watch command\n");
+            printf("Invalid format for trace command\n");
             return;
         }
 
         // Get next comparison
         Core::Serialization::ObjectMapComparison* c = parseComparison(tokens, index, obj_, name);
         if ( c == nullptr ) {
-            printf("Invalid argument passed to watch command\n");
+            printf("Invalid argument in comparison of trace command\n");
             return;
         }
         pt->addComparison(c);
@@ -922,7 +1022,7 @@ ICDebugSST15::cmd_trace(std::vector<std::string>& tokens)
     try {
         auto* tb = parseTraceBuffer(tokens, index, obj_);
         if ( tb == nullptr ) {
-            printf("Invalid argument passed to trace command\n");
+            printf("Invalid trace buffer argument in trace command\n");
             return;
         }
         pt->addTraceBuffer(tb);
@@ -937,21 +1037,22 @@ ICDebugSST15::cmd_trace(std::vector<std::string>& tokens)
 
             auto* objBuf = parseTraceVar(tvar, obj_, tb);
             if ( objBuf == nullptr ) {
-                printf("Invalid argument passed to trace command\n");
+                printf("Invalid trace variable argument passed to trace command\n");
                 return;
             }
             pt->addObjectBuffer(objBuf);
         } // end while get trace vars
 
-        // Get action
-        std::string          action     = tokens[index++];
-        WatchPoint::WPACTION actionType = getAction(action);
-        if ( actionType == WatchPoint::WPACTION::INVALID ) {
-            printf("Unknown action: %s\n", action.c_str());
+        // Parse action
+        std::string action = tokens[index];
+
+        WatchPoint::WPAction* actionObj = parseAction(tokens, index, obj_);
+        if (actionObj == nullptr) {
+            printf("Error in action: %s\n", action.c_str());
             return;
         }
         else {
-            pt->setAction(actionType);
+            pt->setAction(actionObj);
         }
 
         // Check for extra arguments
@@ -970,10 +1071,20 @@ ICDebugSST15::cmd_trace(std::vector<std::string>& tokens)
             printf("Not a component\n");
     }
     catch ( std::exception& e ) {
-        printf("Invalid argument passed to watch command\n");
+        printf("Invalid format for trace command\n");
         return;
     }
 };
+
+void
+ICDebugSST15::cmd_shutdown(std::vector<std::string>& tokens)
+{
+    simulationShutdown();
+    done = true;
+    printf("Exiting ObjectExplorer and shutting down simulation\n");
+    return;
+}
+
 
 void
 ICDebugSST15::dispatch_cmd(std::string cmd)

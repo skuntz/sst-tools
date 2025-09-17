@@ -149,6 +149,11 @@ void DbgSST15::serialize_order(SST::Core::Serialization::serializer& ser){
   SST_SER(size);
   SST_SER(*probe_);
 
+  SST_SER(v_true);
+  SST_SER(v_false);
+  SST_SER(v_float);
+  SST_SER(v_double);
+
 #if TESTSER
   SST_SER(*test_uptr);
   SST_SER(PC_uptr->start);

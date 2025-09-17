@@ -240,6 +240,11 @@ private:
   unsigned cliType;                               ///< 0-serializer-entry, 1-initiateInteractive
   int64_t rCheck;                                 /// < skk used for watchpoint trigger of msg size
   size_t size;                                    ///< skk used for watchpoint trigger of msg size > 100
+  // -- testing interactive console
+  bool v_true = true;
+  bool v_false = false;
+  float v_float = 1.0;
+  double v_double = 2.0;
 
 #if PROBE
 // -- Component probe state object
@@ -333,7 +338,7 @@ struct event_atts_t {
   // trace buffer
   std::shared_ptr<ProbeBuffer<event_atts_t>> probeBuffer;
   // -------------------------------------------------------
-  // DbgSST15i_Probe Component Serialization Method
+  // DbgSST15_Probe Component Serialization Method
   // -------------------------------------------------------
   void serialize_order(SST::Core::Serialization::serializer& ser);
 
