@@ -48,7 +48,7 @@
 #include <sst/core/rng/rng.h>
 #include <sst/core/rng/mersenne.h>
 #include <sst/core/serialization/serialize.h>
-#if 1 // Used for interactive console
+#if 0 // Used for interactive console
 #include <sst/core/baseComponent.h>
 #include <sst/core/stringize.h>
 #include <sst/core/interactiveConsole.h>
